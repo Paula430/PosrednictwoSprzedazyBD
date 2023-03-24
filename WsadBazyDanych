@@ -1,0 +1,1021 @@
+USE master
+GO
+
+IF EXISTS
+( SELECT name FROM master.dbo.sysdatabases
+WHERE name = N'Posrednictwo_Sprzedazy')
+BEGIN
+	DROP DATABASE Posrednictwo_Sprzedazy
+END
+GO
+
+CREATE DATABASE Posrednictwo_Sprzedazy
+ON
+PRIMARY
+( NAME = Posrednictwo_Sprzedazy,
+  FILENAME = 'C:\Program Files\MSSQL15.MSSQLSERVER\MSSQL\DATA\Posrednictwo_Sprzedazy_01.mdf')
+  
+LOG ON
+( NAME = Posrednictwo_Sprzedazy_log01,
+  FILENAME = 'C:\Program Files\MSSQL15.MSSQLSERVER\MSSQL\Log\Posrednictwo_Sprzedazy_log01.ldf')
+  
+GO
+
+USE Posrednictwo_Sprzedazy
+GO
+
+DROP TABLE IF EXISTS dbo.Dostawcy;
+GO
+
+CREATE TABLE Dostawcy
+(
+	[IdDostawcy] int IDENTITY (1,1) NOT NULL,
+	[NazwaFirmy] varchar(68) NOT NULL,
+	[NIP] varchar(14) NOT NULL UNIQUE,
+	[Przedstawiciel] varchar(50) NULL,
+	[Email] varchar(68) NOT NULL UNIQUE,
+	CONSTRAINT "PK_Dostawcy" PRIMARY KEY  CLUSTERED 
+	(
+		"IdDostawcy"
+	),
+);
+
+GO
+
+DROP TABLE IF EXISTS dbo.Kategorie;
+GO
+
+CREATE TABLE Kategorie
+(
+	[IdKategorii] int IDENTITY (1,1) NOT NULL,
+	[NazwaKategorii] varchar(68) NOT NULL,
+	CONSTRAINT "PK_Kateogria" PRIMARY KEY  CLUSTERED 
+	(
+		"IdKategorii"
+	),
+
+);
+
+GO
+
+DROP TABLE IF EXISTS dbo.Produkty;
+GO
+
+CREATE TABLE Produkty
+(
+	[IdProduktu] int IDENTITY (1,1) NOT NULL,
+	[NazwaProduktu] varchar(68) NOT NULL,
+	[Cena] money NOT NULL,
+	[OpisProduktu] varchar(255) NULL,
+	[IdDostawcy] int NOT NULL,
+	[IdKategorii] int NOT NULL,
+	CONSTRAINT "PK_Produktu" PRIMARY KEY  CLUSTERED 
+	(
+		"IdProduktu"
+	),
+		CONSTRAINT "FK_Produkty_Dostawcy" FOREIGN KEY 
+	(
+		"IdDostawcy"
+	) REFERENCES "dbo"."Dostawcy" (
+		"IdDostawcy"
+	),
+		CONSTRAINT "FK_Produkty_Kategorie" FOREIGN KEY 
+	(
+		"IdKategorii"
+	) REFERENCES "dbo"."Kategorie" (
+		"IdKategorii"
+	),
+	
+);
+
+GO
+
+
+DROP TABLE IF EXISTS dbo.Miejscowosci;
+GO
+
+CREATE TABLE Miejscowosci(
+	[IdMiejscowosci] int IDENTITY (1,1) NOT NULL,
+	[NazwaMiejscowosci] varchar(40) NOT NULL,
+	[Region] varchar(30) NOT NULL,
+	[Kraj] varchar(30) NOT NULL,
+	
+
+CONSTRAINT "PK_Miejscowosci" PRIMARY KEY  CLUSTERED 
+	(
+		"IdMiejscowosci"
+	),
+)
+
+DROP TABLE IF EXISTS dbo.AdresyKlientow;
+GO
+
+CREATE TABLE AdresyKlientow
+(
+	[IdAdresuKlienta] int IDENTITY (1,1) NOT NULL,
+	[KodPocztowy] varchar(9) NOT NULL,
+	[Ulica] varchar(35) NULL,
+	[NrBudynku] smallint NOT NULL,
+	[NrMieszkania] smallint NULL,
+	[IdMiejscowosci] int NOT NULL,
+
+	CONSTRAINT "PK_AdresuKlienta" PRIMARY KEY  CLUSTERED 
+	(
+		"IdAdresuKlienta"
+	),
+	
+	CONSTRAINT "FK_AdresKlienta_Miejscowosc" FOREIGN KEY 
+	(
+		"IdMiejscowosci"
+	) REFERENCES "dbo"."Miejscowosci" (
+		"IdMiejscowosci"
+	),
+);
+
+GO
+
+DROP TABLE IF EXISTS dbo.Klienci;
+GO
+
+CREATE TABLE Klienci
+(
+	[IdKlienta] int IDENTITY (1,1) NOT NULL,
+	[Imie] varchar(30) NOT NULL,
+	[Nazwisko] varchar(68) NOT NULL,
+	[Telefon] varchar(12) NULL,
+	[Email] varchar(68) NOT NULL UNIQUE,
+	[IdAdresuKlienta] int NOT NULL,
+	CONSTRAINT "PK_Klienta" PRIMARY KEY  CLUSTERED 
+	(
+		"IdKlienta"
+	),
+	CONSTRAINT "FK_Klienci_AdresKlienta" FOREIGN KEY 
+	(
+		"IdAdresuKlienta"
+	) REFERENCES "dbo"."AdresyKlientow" (
+		"IdAdresuKLienta"
+	),
+);
+
+GO
+
+
+DROP TABLE IF EXISTS dbo.AdresyDostawcow;
+GO
+
+CREATE TABLE AdresyDostawcow
+(
+	[IdAdresuDostawcow] int IDENTITY (1,1) NOT NULL,
+	[KodPocztowy] varchar(9) NOT NULL,
+	[Ulica] varchar(35) NULL,
+	[NrBudynku] smallint NOT NULL,
+	[NrMieszkania] smallint NULL,
+	[IdDostawcy] int NOT NULL,
+	[IdMiejscowosci] int NOT NULL
+	CONSTRAINT "PK_AdresyDostawcow" PRIMARY KEY  CLUSTERED 
+	(
+		"IdAdresuDostawcow"
+	), 
+		CONSTRAINT "FK_AdresDostawcow_Dostawcy" FOREIGN KEY 
+	(
+		"IdDostawcy"
+	) REFERENCES "dbo"."Dostawcy"
+	(
+		"IdDostawcy"
+	),
+		CONSTRAINT "FK_AdresDostawcow_Miejscowosc" FOREIGN KEY 
+	(
+		"IdMiejscowosci"
+	) REFERENCES "dbo"."Miejscowosci" (
+		"IdMiejscowosci"
+	),
+	
+);
+
+GO
+
+DROP TABLE IF EXISTS dbo.TelefonyDostawcow;
+GO
+
+CREATE TABLE TelefonyDostawcow
+(
+	[IdTelefonuDostawcow] int IDENTITY (1,1) NOT NULL,
+	[NumerTelefonu] varchar(12) NOT NULL,
+	[IdDostawcy] int NOT NULL,
+	CONSTRAINT "PK_TelefonDostawcow" PRIMARY KEY  CLUSTERED 
+	(
+		"IdTelefonuDostawcow"
+	),
+		CONSTRAINT "FK_TelefonyDostawcow_Dostawcy" FOREIGN KEY 
+	(
+		"IdDostawcy"
+	) REFERENCES "dbo"."Dostawcy" (
+		"IdDostawcy"
+	),
+);
+GO
+
+DROP TABLE IF EXISTS dbo.FakturyOdProwizji;
+GO
+
+CREATE TABLE FakturyOdProwizji
+(
+	[NumerFaktury] int IDENTITY (1,1) NOT NULL,
+	[DataWystawienia] date NOT NULL,
+	[WartoscBrutto] money NOT NULL,
+	[Status] varchar(20) NOT NULL,
+	[IdDostawcy] int NOT NULL,
+
+
+	CONSTRAINT "PK_NumerFaktury" PRIMARY KEY  CLUSTERED 
+	(
+		"NumerFaktury"
+	),
+	CONSTRAINT "FK_FakturyOdProwizji_Dostawcy)" FOREIGN KEY 
+	(
+		"IdDostawcy"
+	) REFERENCES "dbo"."Dostawcy" ( 
+		"IdDostawcy"
+	),
+	CONSTRAINT "CK_Date1" CHECK (DataWystawienia>=(Convert(date,getdate())))
+
+	
+);
+GO
+
+DROP TABLE IF EXISTS dbo.Zamowienia;
+GO
+
+CREATE TABLE Zamowienia
+(
+	[IdZamowienia] int IDENTITY (1,1) NOT NULL,
+	[DataZamowienia] datetime NOT NULL,
+	[DataOplacenia] datetime NULL,
+	[Uwagi] varchar(200) NULL,
+	[Status] varchar(20) NOT NULL,
+	[IdKlienta] int NOT NULL,
+	[IdDostawcy] int NOT NULL,
+
+	CONSTRAINT "PK_Zamowienia" PRIMARY KEY  CLUSTERED 
+	(
+		"IdZamowienia"
+	),
+	CONSTRAINT "FK_Zamowienia_Klienci)" FOREIGN KEY 
+	(
+		"IdKlienta"
+	) REFERENCES "dbo"."Klienci" ( 
+		"IdKlienta"
+	),
+	CONSTRAINT "FK_Zamowienia_Dostawcy)" FOREIGN KEY 
+	(
+		"IdDostawcy"
+	) REFERENCES "dbo"."Dostawcy" ( 
+		"IdDostawcy"
+	),
+		CONSTRAINT "CK_Date2" CHECK (DataOplacenia>=(Convert(date,getdate()))),
+		CONSTRAINT "CK_Date3" CHECK (DataZamowienia>=(Convert(date,getdate())))
+
+		
+);
+
+GO
+
+
+DROP TABLE IF EXISTS dbo.PozycjeZamowienia;
+GO
+CREATE TABLE PozycjeZamowienia
+(
+	[Ilosc] int NOT NULL,
+	[IdProduktu] int NOT NULL,
+	[IdZamowienia] int  NOT NULL,
+	  
+	  CONSTRAINT "PK_PozycjeZamowienia" PRIMARY KEY  CLUSTERED 
+	(
+		"IdProduktu", "IdZamowienia"
+	),
+	 
+	CONSTRAINT "FK_PozycjeZamowienia_Zamowienia)" FOREIGN KEY 
+	(
+		"IdZamowienia"
+	) REFERENCES "dbo"."Zamowienia" ( 
+		"IdZamowienia"
+	),
+	CONSTRAINT "FK_PozycjeZamowienia_Produkty)" FOREIGN KEY 
+	(
+		"IdProduktu"
+	) REFERENCES "dbo"."Produkty" ( 
+		"IdProduktu"
+	),
+	CONSTRAINT "CK_Ilosc1" CHECK (Ilosc > 0)
+	
+);
+
+GO
+
+
+CREATE INDEX NumerFakturyIndex ON dbo.FakturyOdProwizji(NumerFaktury)
+GO
+
+CREATE INDEX CenaIndex ON dbo.Produkty(Cena)
+GO
+
+CREATE FUNCTION IsValidNip
+(
+  @nip nvarchar(14)
+)
+RETURNS bit
+AS
+BEGIN
+  SELECT @nip = REPLACE(@nip,'-','')
+  IF @nip LIKE '%0^'
+    RETURN 0
+	  IF @nip LIKE '0000000000'
+    RETURN 0
+  IF ISNUMERIC(@nip) = 0
+    RETURN 0
+  DECLARE
+    @weights AS TABLE
+    (
+      Position tinyint IDENTITY(1,1) NOT NULL,
+      Weight tinyint NOT NULL
+    )
+  INSERT INTO @weights VALUES (6), (5), (7), (2), (3), (4), (5), (6), (7)
+  IF SUBSTRING(@nip, 10, 1) = (SELECT SUM(CONVERT(TINYINT, SUBSTRING(@nip, Position, 1)) * Weight) % 11 FROM @weights)
+    RETURN 1
+  RETURN 0
+END
+GO
+
+CREATE FUNCTION IsPhoneNumberValid
+(
+	@number varchar(12)
+)
+RETURNS bit
+AS 
+BEGIN 
+ SELECT @number = REPLACE(@number,'-','')
+	IF ISNUMERIC(@number)=0
+			RETURN 0;
+	IF (LEN(@number)!=9)
+		RETURN 0;
+	RETURN 1;
+		
+END
+GO
+
+CREATE FUNCTION IsValidEmail
+(
+	@email varchar(68)
+)
+RETURNS bit 
+AS 
+BEGIN 
+	 IF (@email LIKE '_%@__%.__%')
+			RETURN 1
+	 RETURN 0
+ END
+ GO
+
+ CREATE FUNCTION IsVarcharWithoutNumber
+(
+	@string varchar(12)	
+)
+RETURNS bit 
+AS 
+BEGIN 
+	 IF (@string LIKE '%[0-9]%')
+		BEGIN
+			RETURN 0;
+		END
+	 RETURN 1;
+END
+GO
+
+CREATE TRIGGER dbo.trCheckKlienci ON dbo.Klienci
+AFTER INSERT AS
+BEGIN
+SET NOCOUNT ON;
+
+    DECLARE @email varchar(68);
+    DECLARE @imie varchar(30);
+    DECLARE @nazwisko varchar(68);
+	DECLARE @number varchar(12);
+	DECLARE @result bit;
+	
+    SELECT @email=i.Email FROM inserted i; 
+	SELECT @imie=i.Imie FROM inserted i;
+	SELECT @nazwisko=i.Nazwisko FROM inserted i;
+	SELECT @number=i.Telefon FROM inserted i;
+
+	
+	IF (dbo.IsValidEmail(@email)=0) 
+		BEGIN
+            RAISERROR('Nieprawidlowy adres email', 11,1)
+            ROLLBACK TRANSACTION
+		END
+
+	IF (dbo.IsVarcharWithoutNumber(@imie)=0) 
+		BEGIN
+            RAISERROR('Pole imie nie moze posiadac cyfr', 11,1)
+            ROLLBACK TRANSACTION
+		END
+
+	IF (dbo.IsVarcharWithoutNumber(@nazwisko)=0) 
+		BEGIN
+            RAISERROR('Pole nazwisko nie moze posiadac cyfr', 11,1)
+            ROLLBACK TRANSACTION
+		END
+
+	IF (dbo.IsPhoneNumberValid(@number)=0) 
+	BEGIN
+        RAISERROR('Nieprawidlowy numer telefonu', 11,1)
+        ROLLBACK TRANSACTION
+	END
+END
+GO
+
+CREATE TRIGGER dbo.trCheckDostawcy ON dbo.Dostawcy
+AFTER INSERT AS
+BEGIN
+SET NOCOUNT ON;
+
+    DECLARE @email varchar(68);
+    DECLARE @przedstawiciel varchar(30);
+	DECLARE @nip varchar(14);
+	
+	   
+    SELECT @email=i.Email FROM inserted i; 
+	SELECT @przedstawiciel=i.Przedstawiciel FROM inserted i;
+	SELECT @nip=i.nip FROM inserted i;
+	
+	
+	IF (dbo.IsValidEmail(@email)=0) 
+		BEGIN
+            RAISERROR('Nieprawidlowy adres email', 11,1)
+            ROLLBACK TRANSACTION
+		END
+
+	IF (dbo.IsVarcharWithoutNumber(@przedstawiciel)=0) 
+		BEGIN
+            RAISERROR('Pole przedstawiciel nie moze posiadac cyfr', 11,1)
+            ROLLBACK TRANSACTION
+		END
+
+	IF (dbo.IsValidNip(@nip)=0) 
+		BEGIN
+            RAISERROR('Nieprawidlowy nip', 11,1)
+            ROLLBACK TRANSACTION
+		END
+END
+GO
+
+CREATE TRIGGER dbo.trCheckTelefonDostawcy ON dbo.TelefonyDostawcow
+AFTER INSERT AS
+BEGIN
+SET NOCOUNT ON;
+DECLARE @number varchar(12);
+
+SELECT @number=i.NumerTelefonu FROM inserted i;
+
+		IF (dbo.IsPhoneNumberValid(@number)=0) 
+		BEGIN
+            RAISERROR('Nieprawidlowy numer telefonu', 11,1)
+            ROLLBACK TRANSACTION
+		END
+
+END
+GO
+
+CREATE TRIGGER dbo.trCheckFakturaOdProwizji ON dbo.FakturyOdProwizji
+AFTER INSERT AS
+BEGIN
+SET NOCOUNT ON;
+	DECLARE @date1 date;
+	DECLARE @date2 date;
+	DECLARE @status varchar(20);
+
+	
+   SELECT @date1=i.DataWystawienia FROM inserted i;
+   SELECT @status=i.Status FROM inserted i;
+   SELECT @date2=DataZamowienia FROM Zamowienia
+
+		IF(@status NOT LIKE '[W|w]ystawiona' AND @status NOT LIKE '[W|w]ys[ł|l]ana')
+		BEGIN
+			RAISERROR('Nieprawidlowy status',11,1);
+			ROLLBACK TRANSACTION;
+		RETURN;
+	END
+	
+END 
+GO
+
+CREATE TRIGGER dbo.trCheckmiejscowosci ON dbo.Miejscowosci
+AFTER INSERT AS
+BEGIN
+SET NOCOUNT ON;
+
+	DECLARE @kraj varchar(30);  	
+	DECLARE @region varchar(30); 
+		
+			
+   SELECT @kraj=i.Kraj FROM inserted i;
+   SELECT @region=i.Region FROM inserted i;
+   
+
+	IF (dbo.IsVarcharWithoutNumber(@kraj)=0) 
+		BEGIN
+            RAISERROR('Pole kraj nie moze posiadac cyfr', 11,1)
+            ROLLBACK TRANSACTION
+		END
+
+		
+	IF (dbo.IsVarcharWithoutNumber(@region)=0) 
+		BEGIN
+            RAISERROR('Pole region nie moze posiadac cyfr', 11,1)
+            ROLLBACK TRANSACTION
+		END
+
+END
+GO
+
+CREATE TRIGGER dbo.trCheckZamowienia ON Zamowienia 
+AFTER INSERT AS
+BEGIN
+SET NOCOUNT ON;
+
+	DECLARE @status varchar(20); 
+	DECLARE @dateZam date;
+	DECLARE @dateOpl date;
+
+	SELECT @status=i.Status FROM inserted i;
+	SELECT @dateZam=i.DataZamowienia FROM inserted i;
+	SELECT @dateOpl=i.DataOplacenia FROM inserted i;
+
+	IF(@status NOT LIKE '[A|a]nulowane' AND @status NOT LIKE '[Z|z]am[ó|o]wione' AND @status
+	NOT LIKE '[Z|z]ap[ł|l]acone')
+	BEGIN
+		RAISERROR('Nieprawidlowy status',11,1);
+		ROLLBACK TRANSACTION;
+		RETURN;
+	END
+
+	IF(@dateZam>@dateOpl)
+		BEGIN
+		RAISERROR('Data zamowienia nie moze przypadac pozniej od daty oplacenia zamowienia',11,1);
+		ROLLBACK TRANSACTION;
+		RETURN;
+	END
+
+END
+GO
+
+CREATE PROCEDURE [ProcRankingNajwiecejZamowionychProduktow]
+AS
+BEGIN
+	SELECT PozycjeZamowienia.IdProduktu, COUNT(PozycjeZamowienia.IdProduktu) AS IloscZamowien FROM PozycjeZamowienia
+	GROUP BY  PozycjeZamowienia.IdProduktu
+	ORDER BY COUNT(PozycjeZamowienia.IdProduktu) DESC
+END	
+GO
+
+CREATE PROCEDURE [ProcRankingNajmniejZamowionychProduktow]
+AS
+BEGIN
+	SELECT PozycjeZamowienia.IdProduktu, COUNT(PozycjeZamowienia.IdProduktu) AS IloscZamowien FROM PozycjeZamowienia
+	GROUP BY  PozycjeZamowienia.IdProduktu
+	ORDER BY COUNT(PozycjeZamowienia.IdProduktu) ASC
+END
+GO
+
+CREATE PROC ProcDodajZamowienie( @dataZam date, @dataOpl date, @uwagi varchar(200), @idKlienta int, @IdDostawcy int)
+AS
+DECLARE @status AS varchar(20)='Zamówione'
+INSERT INTO Zamowienia(DataZamowienia,DataOplacenia,Uwagi,Status,IdKlienta,IdDostawcy) VALUES (@dataZam,@dataOpl,@uwagi,@status,@idKlienta, @IdDostawcy)
+GO
+
+CREATE PROC ProcZmienStatusZamowienia @s varchar(20), @id int
+AS
+BEGIN 
+UPDATE Zamowienia
+SET Status=@s
+WHERE IdZamowienia=@id
+END 
+GO 
+
+
+CREATE PROC ProcZmienStatusFaktury @s varchar(20), @numer int
+AS
+BEGIN 
+UPDATE FakturyOdProwizji
+SET Status=@s
+WHERE NumerFaktury=@numer
+END 
+GO
+
+CREATE PROC DodajKlienta(@im varchar(30), @naz varchar(68), @em varchar(68), @tel varchar(12), @kodPocz varchar(9),
+@ul varchar(35), @nrBud smallint, @nrMiesz smallint, @miejscowosc varchar(40), @reg varchar(30), @kr varchar(30) )
+AS 
+BEGIN 
+	DECLARE @idMiej INT;
+	DECLARE @IdAdresuKL INT;
+
+	IF NOT EXISTS (SELECT NazwaMiejscowosci FROM Miejscowosci WHERE NazwaMiejscowosci=@miejscowosc AND Region=@reg AND Kraj=@kr)
+		BEGIN 
+			INSERT INTO Miejscowosci(NazwaMiejscowosci,Region,Kraj) VALUES(@miejscowosc, @reg, @kr)
+		END
+		
+	
+		SET @idMiej= (SELECT IdMiejscowosci FROM Miejscowosci WHERE NazwaMiejscowosci=@miejscowosc AND Region=@reg AND Kraj=@kr)
+		
+
+	IF NOT EXISTS (SELECT IdMiejscowosci FROM AdresyKlientow WHERE KodPocztowy=@kodPocz AND Ulica=@ul AND NrBudynku=@nrBud AND NrMieszkania=@nrMiesz AND IdMiejscowosci=@idMiej)
+		BEGIN
+			INSERT INTO AdresyKlientow(KodPocztowy,NrBudynku,IdMiejscowosci,NrMieszkania,Ulica) VALUES(@kodPocz, @nrBud,@idMiej,@nrMiesz,@ul)
+		END
+
+		SET @IdAdresuKL= (SELECT IdAdresuKlienta FROM AdresyKlientow WHERE  KodPocztowy=@kodPocz AND Ulica=@ul AND NrBudynku=@nrBud AND NrMieszkania=@nrMiesz AND IdMiejscowosci=@idMiej)
+		
+	INSERT INTO Klienci(Imie,Nazwisko,Email,IdAdresuKlienta,Telefon) VALUES (@im, @naz, @em, @IdAdresuKL,@tel)
+
+END
+GO
+
+CREATE PROC DodajDostawce(@nazwaF varchar(68), @numernip varchar(14), @przedst varchar(50), @em varchar(68), @tel varchar(12), @kodPocz varchar(9),
+@ul varchar(35), @nrBud smallint, @nrMiesz smallint,  @miejscowosc varchar(40), @reg varchar(30), @kr varchar(30))
+AS 
+BEGIN 
+	DECLARE @idMiej INT;
+	DECLARE @IDostaw INT;
+
+	IF NOT EXISTS (SELECT NazwaMiejscowosci FROM Miejscowosci WHERE NazwaMiejscowosci=@miejscowosc AND Region=@reg AND Kraj=@kr)
+		BEGIN 
+			INSERT INTO Miejscowosci(NazwaMiejscowosci,Region,Kraj) VALUES(@miejscowosc, @reg, @kr)
+		END
+	
+	SET @idMiej= (SELECT IdMiejscowosci FROM Miejscowosci WHERE NazwaMiejscowosci=@miejscowosc AND Region=@reg AND Kraj=@kr)
+	
+	INSERT INTO Dostawcy(NazwaFirmy,NIP,Email,Przedstawiciel) VALUES (@nazwaF, @numernip, @em, @przedst)
+
+	SET @IDostaw=(SELECT IdDostawcy FROM Dostawcy WHERE NazwaFirmy=@nazwaF AND NIP=@numernip AND Email=@em AND Przedstawiciel=@przedst )
+
+	INSERT INTO AdresyDostawcow(KodPocztowy,Ulica,NrBudynku,NrMieszkania,IdDostawcy,IdMiejscowosci) VALUES (@kodPocz, @ul,@nrBud,@nrMiesz, @IDostaw, @idMiej)
+
+	INSERT INTO TelefonyDostawcow(NumerTelefonu,IdDostawcy) VALUES (@tel,@IDostaw)
+
+END
+GO
+
+CREATE PROC DodajProdukt (@nazwa varchar(68), @c decimal, @opis varchar(255), @kategoria varchar(68), @nazwaFir varchar(68) )
+AS
+BEGIN
+
+	DECLARE @DostawcaId int;
+	DECLARE @KategorieId int;
+	DECLARE @IdProd int;
+
+
+	IF NOT EXISTS (SELECT * FROM Kategorie WHERE NazwaKategorii=@kategoria)
+		BEGIN 
+			INSERT Kategorie(NazwaKategorii) VALUES (@kategoria)
+		END
+
+	SET @KategorieId=(SELECT IdKategorii FROM Kategorie WHERE NazwaKategorii=@kategoria)
+	SET @Dostawcaid=(SELECT IdDostawcy FROM Dostawcy WHERE NazwaFirmy=@nazwaFir)
+
+	INSERT INTO Produkty(NazwaProduktu,Cena,OpisProduktu,IdDostawcy,IdKategorii) VALUES (@nazwa, @c, @opis,@DostawcaId,@KategorieId)
+
+END
+GO
+
+CREATE PROC ObliczProwizjaZamowienia(@idZam int, @w decimal output)
+AS
+  SET NOCOUNT ON;
+BEGIN
+	SELECT @w=(SELECT 0.2*SUM(Ilosc*Cena) AS Prowizja
+	FROM PozycjeZamowienia INNER JOIN Produkty ON PozycjeZamowienia.IdProduktu=Produkty.IdProduktu 
+	WHERE IdZamowienia=@idZam
+	GROUP BY IdZamowienia);
+	RETURN;
+END 
+GO
+
+CREATE FUNCTION ObliczWartoscNetto(@kwota decimal)
+RETURNS decimal
+AS
+BEGIN
+DECLARE @netto decimal;
+SET @netto=@kwota*0.77
+RETURN @netto
+END
+GO
+
+CREATE TRIGGER TrUsunAnulowaneZamowienie ON Zamowienia 
+AFTER UPDATE 
+AS
+BEGIN 
+	DELETE FROM Zamowienia WHERE Status='Anulowane' AND Status='anulowane';
+END
+GO
+
+
+CREATE TRIGGER TrGenerujFakture ON Zamowienia 
+AFTER UPDATE
+AS IF 
+NOT UPDATE(DataZamowienia) AND NOT UPDATE(Uwagi) AND NOT UPDATE(IdKlienta) AND NOT UPDATE(IdDostawcy)
+BEGIN
+	DECLARE @status varchar(20);
+	DECLARE @idZam int;
+	DECLARE @dataZaplaty date;
+	DECLARE @IdDostaw int;
+	DECLARE @wartosc money;
+
+	SELECT @status=i.Status FROM inserted i;
+	SELECT @idZam=i.IdZamowienia FROM inserted i;
+	SELECT @dataZaplaty=i.DataOplacenia FROM inserted i;
+	SELECT @IdDostaw=i.IdDostawcy FROM inserted i;
+
+	EXEC ObliczProwizjaZamowienia @idZam=@idZam, @w=@wartosc OUTPUT;
+
+	IF(@status='zapłacone' OR @status='Zapłacone' OR @status='zaplacone' OR @status='Zaplacone')
+	BEGIN 
+		INSERT INTO FakturyOdProwizji(DataWystawienia, IdDostawcy, Status, WartoscBrutto) VALUES (@dataZaplaty, @IdDostaw, 'wystawiona', @wartosc)
+	END 
+END
+GO
+
+
+ALTER TABLE Klienci NOCHECK CONSTRAINT ALL
+GO
+EXEC DodajKlienta @im='Monika', @naz='Kowal', @em='ddd@dee.com', @tel='123324567', @kodPocz='34-324', @ul='Krakowska', @nrBud=25, @nrMiesz=89, @miejscowosc='Kraków', @reg='Małopolskie', @kr='Polska' 
+EXEC DodajKlienta @im='Aleksandra', @naz='Piecha', @em='eee@eee.com', @tel='178978964', @kodPocz='24-324', @ul='Krakowska', @nrBud=25, @nrMiesz=89, @miejscowosc='Kraków', @reg='Małopolskie', @kr='Polska' 
+EXEC DodajKlienta @im='Maciek', @naz='Proch', @em='fff@fee.com', @tel='108978964', @kodPocz='22-222', @ul='Brzoskwiniowa', @nrBud=67, @nrMiesz=1, @miejscowosc='Kraków', @reg='Małopolskie', @kr='Polska'
+EXEC DodajKlienta @im='Jagoda', @naz='Pawlus', @em='hjossan@mexcool.com', @tel='794766164', @kodPocz='33-354', @ul='Hiacyntowa', @nrBud=67, @nrMiesz=1, @miejscowosc='Poznań', @reg='Wielkopolskie', @kr='Polska'
+EXEC DodajKlienta @im='Teresa', @naz='Piecuch', @em='dybo176@aerobicservice.com', @tel='238577666', @kodPocz='30-364', @ul='Pomaranczowa', @nrBud=67, @nrMiesz=1, @miejscowosc='Szczecin', @reg='Zachodnipomorskie', @kr='Polska'
+EXEC DodajKlienta @im='Tomasz', @naz='Adam', @em='dybo176@smulevip.com', @tel='659590161', @kodPocz='38-354', @ul='Jagiello', @nrBud=67, @nrMiesz=1, @miejscowosc='Bielsko-Biała', @reg='Śląskie', @kr='Polska'
+EXEC DodajKlienta @im='Lucyna', @naz='Szewczyk', @em='taeguks@cloudscredit.com', @tel='757329567', @kodPocz='30-359', @ul='Handlowa', @nrBud=67, @nrMiesz=1, @miejscowosc='Bielsko-Biała', @reg='Śląskie', @kr='Polska'
+EXEC DodajKlienta @im='Klementyna', @naz='Devon', @em='stun99@financaswsbz.com', @tel='218170319', @kodPocz='30-754', @ul='Rajska', @nrBud=67, @nrMiesz=1, @miejscowosc='Łódź', @reg='Łódzkie', @kr='Polska'
+EXEC DodajKlienta @im='Ilona', @naz='Ann', @em='ksstudio@culasatu.site', @tel='974895050', @kodPocz='10-354', @ul='Cytrynowa', @nrBud=67, @nrMiesz=1, @miejscowosc='Zielona Góra', @reg='Lubuskie', @kr='Polska'
+EXEC DodajKlienta @im='Natalia', @naz='Nixon', @em='dyaalyona@omdiaco.com', @tel='038590472', @kodPocz='10-304', @ul='Leśna', @nrBud=67, @nrMiesz=1, @miejscowosc='Kraków', @reg='Małopolskie', @kr='Polska'
+EXEC DodajKlienta @im='Kamil', @naz='Pipps', @em='earthlyrocks@24hinbox.com', @tel='554932861', @kodPocz='30-300', @ul='Górna', @nrBud=67, @nrMiesz=1, @miejscowosc='Kraków', @reg='Małopolskie', @kr='Polska'
+EXEC DodajKlienta @im='Łukasz', @naz='Kumar', @em='vballchick11@storesup.shop', @tel='839728901', @kodPocz='30-388', @ul='Dolna', @nrBud=67, @nrMiesz=1, @miejscowosc='Kraków', @reg='Małopolskie', @kr='Polska'
+EXEC DodajKlienta @im='Krystyna', @naz='Moncada', @em='starshiylos@webaz.xyz', @tel='072133908', @kodPocz='30-376', @ul='Fioletowa', @nrBud=67, @nrMiesz=1, @miejscowosc='Kraków', @reg='Małopolskie', @kr='Polska'
+EXEC DodajKlienta @im='Anastazja', @naz='Kloss', @em='cabisa@cardkurd.com', @tel='108978964', @kodPocz='81-254', @ul='Czerwona', @nrBud=67, @nrMiesz=1, @miejscowosc='Kraków', @reg='Małopolskie', @kr='Polska'
+EXEC DodajKlienta @im='Hubert', @naz='Wong', @em='dp47663@mailcuk.com', @tel='108978964', @kodPocz='33-334', @ul='Zielona', @nrBud=67, @nrMiesz=12, @miejscowosc='Kraków', @reg='Małopolskie', @kr='Polska'
+EXEC DodajKlienta @im='Michał', @naz='Nixon', @em='fanatkakms@roidirt.com', @tel='108978964', @kodPocz='44-344', @ul='Czarna', @nrBud=67, @nrMiesz=13, @miejscowosc='Kraków', @reg='Małopolskie', @kr='Polska'
+EXEC DodajKlienta @im='Anna', @naz='Nagy', @em='cugutor@go0glelemail.com', @tel='213857106', @kodPocz='36-884', @ul='Bordowa', @nrBud=67, @nrMiesz=14, @miejscowosc='Kraków', @reg='Małopolskie', @kr='Polska'
+EXEC DodajKlienta @im='Dominik', @naz='Pavaroti', @em='fuzzybunny@superhostformula.com', @tel='470844886', @kodPocz='30-954', @ul='Bordowa', @nrBud=67, @nrMiesz=15, @miejscowosc='Kraków', @reg='Małopolskie', @kr='Polska'
+EXEC DodajKlienta @im='Dominika', @naz='Moroni', @em='ageconsultinginc@roidirt.com', @tel='108978964', @kodPocz='30-999', @ul='Pochmurna', @nrBud=67, @nrMiesz=16, @miejscowosc='Katowice', @reg='Śląskie', @kr='Polska'
+EXEC DodajKlienta @im='Zuzanna', @naz='Wilson', @em='hirurgrus1980@boranora.com', @tel='108978964', @kodPocz='30-001', @ul='Sloneczna', @nrBud=67, @nrMiesz=17, @miejscowosc='Katowice', @reg='Śląskie', @kr='Polska'
+EXEC DodajKlienta @im='Iwona', @naz='Camino', @em='chebog@ketoproteinrecipes.com', @tel='913907957', @kodPocz='30-002', @ul='Kolorowa', @nrBud=67, @nrMiesz=18, @miejscowosc='Katowice', @reg='Śląskie', @kr='Polska'
+EXEC DodajKlienta @im='Alejandra', @naz='Berg', @em='ricobirb@ivaluandersen.me', @tel='108978964', @kodPocz='30-003', @ul='Hubertowa', @nrBud=67, @nrMiesz=10, @miejscowosc='Katowice', @reg='Śląskie', @kr='Polska'
+EXEC DodajKlienta @im='Jytee', @naz='Jablonski', @em='leehamm@goldinbox.net', @tel='470844886', @kodPocz='30-304', @ul='Wodna', @nrBud=67, @nrMiesz=4, @miejscowosc='Katowice', @reg='Śląskie', @kr='Polska'
+EXEC DodajKlienta @im='Jonas', @naz='Saveley', @em='yuliadanil@ebarg.net', @tel='108978964', @kodPocz='30-305', @ul='Willowa', @nrBud=67, @nrMiesz=1, @miejscowosc='Kraków', @reg='Małopolskie', @kr='Polska'
+EXEC DodajKlienta @im='Adam', @naz='Muller', @em='cttjr2@uhpanel.com', @tel='036296099', @kodPocz='30-306', @ul='Sportowa', @nrBud=67, @nrMiesz=3, @miejscowosc='Osiek', @reg='Małopolskie', @kr='Polska'
+EXEC DodajKlienta @im='Liou', @naz='Koskito', @em='petermelnik@go0glelemail.com', @tel='854738546', @kodPocz='33-554', @ul='Chwastowa', @nrBud=2, @nrMiesz=1, @miejscowosc='Kielce', @reg='Świetokrzyskie', @kr='Polska'
+EXEC DodajKlienta @im='Liu', @naz='Parente', @em='caa8811@storesup.shop', @tel='108978964', @kodPocz='79-354', @ul='Prężna', @nrBud=67, @nrMiesz=1, @miejscowosc='Kraków', @reg='Małopolskie', @kr='Polska'
+EXEC DodajKlienta @im='Hich', @naz='Henriot', @em='saturnbmp@cheapnitros.com', @tel='913907957', @kodPocz='45-354', @ul='Drewniana', @nrBud=34, @nrMiesz=1, @miejscowosc='Warszawa', @reg='Mazowieckie', @kr='Polska'
+EXEC DodajKlienta @im='Karin', @naz='Josephs', @em='irkazhyra@gmailvn.net', @tel='237453206', @kodPocz='46-354', @ul='Asfaltowa', @nrBud=8, @nrMiesz=1, @miejscowosc='Warszawa', @reg='Mazowieckie', @kr='Polska'
+EXEC DodajKlienta @im='Pascale', @naz='Holz', @em='lisi4ka10@inadtia.com', @tel='036296099', @kodPocz='47-354', @ul='Kamienista', @nrBud=45, @nrMiesz=1, @miejscowosc='Warszawa', @reg='Mazowieckie', @kr='Polska'
+EXEC DodajKlienta @im='Art', @naz='Limeria', @em='l4ka10@inadtia.com', @tel='913907957', @kodPocz='48-354', @ul='Dziurawa', @nrBud=12, @nrMiesz=1, @miejscowosc='Białystok', @reg='Podlaskie', @kr='Polska'
+EXEC DodajKlienta @im='Jose', @naz='Carvalho', @em='fajarachelnl@boranora.com', @tel='854738546', @kodPocz='49-354', @ul='Maślana', @nrBud=6, @nrMiesz=1, @miejscowosc='Ciechanów', @reg='Mazowieckie', @kr='Polska'
+EXEC DodajKlienta @im='Rose', @naz='Caminno', @em='grena1@plexvenet.com', @tel='237453204', @kodPocz='34-154', @ul='Rybna', @nrBud=7, @nrMiesz=1, @miejscowosc='Radom', @reg='Mazowieckie', @kr='Polska'
+GO 
+ALTER TABLE Klienci CHECK CONSTRAINT ALL
+GO
+
+ALTER TABLE Dostawcy NOCHECK CONSTRAINT ALL
+GO
+EXEC DodajDostawce @nazwaF='Jogobella', @numernip='9785426409', @przedst='Kamil Gorek', @em='ggg@ggg.com', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Exotic Liquids', @numernip='3560454229', @przedst='Kamil Gorek', @em='xemekoski@mailyuk.com', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='New Orleans Cajun Delights', @numernip='5271511459', @przedst='Kamil Gorek', @em='jgh424@getcashstash.com', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Grandma Kelly s Homestead', @numernip='3567736184', @przedst='Kamil Gorek', @em='mpaulson@gmailvn.net', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Tokyo Traders', @numernip='1257802804', @przedst='Kamil Gorek', @em='mrvred@easygbd.com', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Cooperativa de Quesos Las Cabras', @numernip='5247806613', @przedst='Kamil Gorek', @em='passat89@alvinneo.com', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Mayumi s', @numernip='5349988842', @przedst='Kamil Gorek', @em='r9vn2y@lompaochi.com', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Pavlova, Ltd.', @numernip='7594004777', @przedst='Kamil Gorek', @em='victoriaklubnichka@arss.me', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Specialty Biscuits, Ltd.', @numernip='1112995856', @przedst='Kamil Gorek', @em='lilti69@onlinecmail.com', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='PB Knäckebröd AB', @numernip='7017986601', @przedst='Kamil Gorek', @em='domarevavalerija@onlinecmail.com', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Refrescos Americanas LTDA', @numernip='7962544994', @przedst='Kamil Gorek', @em='kenbuc1com@zeemails.in', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Heli Süßwaren GmbH & Co. KG', @numernip='9716373526', @przedst='Kamil Gorek', @em='bondov@toecye.com', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Plutzer Lebensmittelgroßmärkte AG', @numernip='5360585324', @przedst='Kamil Gorek', @em='sj022@zeemails.in', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Nord-Ost-Fisch Handelsgesellschaft mbH', @numernip='7763777106', @przedst='Kamil Gorek', @em='jumero@boranora.com', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Formaggi Fortini s.r.l.', @numernip='3766514428', @przedst='Kamil Gorek', @em='hizzle4striz@onlinecmail.com', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Norske Meierier', @numernip='3556033332', @przedst='Kamil Gorek', @em='ivanovmityai@gmailvn.net', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Bigfoot Breweries', @numernip='4174448827', @przedst='Kamil Gorek', @em='jbarton13169@wisbuy.shop', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Svensk Sjöföda AB', @numernip='3776914885', @przedst='Kamil Gorek', @em='pksratboy@onlinecmail.com', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Aux joyeux ecclésiastiques', @numernip='5362906979', @przedst='Kamil Gorek', @em='douglasgomes2005@salehubs.store', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='New England Seafood Cannery', @numernip='1184070599', @przedst='Kamil Gorek', @em='fortheone12@hitbase.net', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Leka Trading', @numernip='1152504267', @przedst='Kamil Gorek', @em='aginsburg@jagomail.com', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Lyngbysild', @numernip='3752826810', @przedst='Kamil Gorek', @em='legiondaun@arss.me', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Zaanse Snoepfabriek', @numernip='9654989081', @przedst='Kamil Gorek', @em='kylesmith7120002@nieise.com', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Karkki Oy', @numernip='1142717180', @przedst='Kamil Gorek', @em='30181115@jagomail.com', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='G day, Mate', @numernip='3418110924', @przedst='Kamil Gorek', @em='washkevin@btcmod.com', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Opole', @reg='Opolskie', @kr='Polska'
+EXEC DodajDostawce @nazwaF='Ma Maison', @numernip='3762009484', @przedst='Kamil Gorek', @em='tynne@adsensekorea.com', @tel='123456789', @kodPocz='12-400', @ul='Drzewna', @nrBud=18, @nrMiesz=null, @miejscowosc='Kraków', @reg='Małopolskie', @kr='Polska'
+GO 
+ALTER TABLE Dostawcy CHECK CONSTRAINT ALL
+GO
+ALTER TABLE Produkty NOCHECK CONSTRAINT ALL
+GO
+EXEC DodajProdukt @nazwa='Czapka Nike', @c=50.00, @opis=null, @kategoria='Ubrania', @nazwaFir='Jogobella'
+EXEC DodajProdukt @nazwa='Chai', @c=50.00, @opis=null, @kategoria='Artykuły spożywcze', @nazwaFir='Jogobella'
+EXEC DodajProdukt @nazwa='Chang', @c=100.00, @opis=null, @kategoria='Ubrania', @nazwaFir='Karkki Oy'
+EXEC DodajProdukt @nazwa='Aniseed Syrup', @c=5.00, @opis=null, @kategoria='Rowery', @nazwaFir='Karkki Oy'
+EXEC DodajProdukt @nazwa='Grandma s Boysenberry Spread', @c=23.90, @opis=null, @kategoria='Rowery', @nazwaFir='Karkki Oy'
+EXEC DodajProdukt @nazwa='Chef Antons Cajun Seasoning', @c=18.70, @opis=null, @kategoria='Słodycze', @nazwaFir='Nord-Ost-Fisch Handelsgesellschaft mbH'
+EXEC DodajProdukt @nazwa='Tofu', @c=34.56, @opis=null, @kategoria='Artykuły spożywcze', @nazwaFir='Nord-Ost-Fisch Handelsgesellschaft mbH'
+EXEC DodajProdukt @nazwa='Genen Shouyu', @c=23.98, @opis=null, @kategoria='Artykuły spożywcze', @nazwaFir='Nord-Ost-Fisch Handelsgesellschaft mbH'
+EXEC DodajProdukt @nazwa='Teatime Chocolate Biscuits', @c=105.78, @opis=null, @kategoria='Słodycze', @nazwaFir='Ma Maison'
+EXEC DodajProdukt @nazwa='Alice Mutton', @c=56.45, @opis=null, @kategoria='Artykuły spożywcze', @nazwaFir='Ma Maison'
+EXEC DodajProdukt @nazwa='Thüringer Rostbratwurst', @c=99.99, @opis=null, @kategoria='Słodycze', @nazwaFir='Ma Maison'
+EXEC DodajProdukt @nazwa='Gravad lax', @c=21.00, @opis=null, @kategoria='Sprzęt domowy', @nazwaFir='Formaggi Fortini s.r.l.'
+EXEC DodajProdukt @nazwa='Boston Crab Meat', @c=9.90, @opis=null, @kategoria='Artykuły spożywcze', @nazwaFir='Formaggi Fortini s.r.l.'
+EXEC DodajProdukt @nazwa='Chocolade', @c=56.34, @opis=null, @kategoria='Sprzęt domowy', @nazwaFir='Pavlova, Ltd.'
+EXEC DodajProdukt @nazwa='Rogede sild', @c=89.99, @opis=null, @kategoria='Sprzęt domowy', @nazwaFir='Pavlova, Ltd.'
+EXEC DodajProdukt @nazwa='Raclette Courdavault', @c=34.67, @opis=null, @kategoria='Sprzęt domowy', @nazwaFir='Pavlova, Ltd.'
+EXEC DodajProdukt @nazwa='Tarte au sucre', @c=12.34, @opis=null, @kategoria='Artykuły spożywcze', @nazwaFir='Pavlova, Ltd.'
+EXEC DodajProdukt @nazwa='Louisiana Fiery Hot Pepper Sauce', @c=49.45, @opis=null, @kategoria='Słodycze', @nazwaFir='Pavlova, Ltd.'
+EXEC DodajProdukt @nazwa='Cukierki mordoklejki', @c=12.97, @opis=null, @kategoria='Słodycze', @nazwaFir='Pavlova, Ltd.'
+EXEC DodajProdukt @nazwa='Original Frankfurter grüne Soße', @c=50.98, @opis=null, @kategoria='Słodycze', @nazwaFir='Karkki Oy'
+EXEC DodajProdukt @nazwa='Lakkalikööri', @c=51.45, @opis=null, @kategoria='Artykuły spożywcze', @nazwaFir='Tokyo Traders'
+EXEC DodajProdukt @nazwa='Flotemysost', @c=78.90, @opis=null, @kategoria='Rowery', @nazwaFir='Tokyo Traders'
+EXEC DodajProdukt @nazwa='Mozzarella di Giovanni', @c=209.00, @opis=null, @kategoria='Słodycze', @nazwaFir='Tokyo Traders'
+EXEC DodajProdukt @nazwa='Röd Kaviar', @c=24.87, @opis=null, @kategoria='Sprzęt domowy', @nazwaFir='Tokyo Traders'
+EXEC DodajProdukt @nazwa='Longlife Tofu', @c=5.50, @opis=null, @kategoria='Artykuły spożywcze', @nazwaFir='Tokyo Traders'
+EXEC DodajProdukt @nazwa='Lakkalikööri', @c=9.96, @opis=null, @kategoria='Sprzęt domowy', @nazwaFir='Tokyo Traders'
+EXEC DodajProdukt @nazwa='Rhönbräu Klosterbier', @c=31.08, @opis=null, @kategoria='Rowery', @nazwaFir='Tokyo Traders'
+EXEC DodajProdukt @nazwa='Laughing Lumberjack Lager', @c=37.00, @opis=null, @kategoria='Rowery', @nazwaFir='Lyngbysild'
+EXEC DodajProdukt @nazwa='Louisiana Hot Spiced Okra', @c=89.00, @opis=null, @kategoria='Rowery', @nazwaFir='Lyngbysild'
+EXEC DodajProdukt @nazwa='Gnocchi di nonna Alice', @c=23.56, @opis=null, @kategoria='Ubrania', @nazwaFir='Lyngbysild'
+EXEC DodajProdukt @nazwa='Camembert Pierrot', @c=87.54, @opis=null, @kategoria='Ubrania', @nazwaFir='Lyngbysild'
+EXEC DodajProdukt @nazwa='Boston Crab Meat', @c=34.77, @opis=null, @kategoria='Ubrania', @nazwaFir='Lyngbysild'
+EXEC DodajProdukt @nazwa='Zaanse koeken', @c=45.77, @opis=null, @kategoria='Ubrania', @nazwaFir='Exotic Liquids'
+EXEC DodajProdukt @nazwa='Spegesild', @c=77.77, @opis=null, @kategoria='Artykuły spożywcze', @nazwaFir='Exotic Liquids'
+EXEC DodajProdukt @nazwa='Singaporean Hokkien Fried Mee', @c=88.88, @opis=null, @kategoria='Artykuły spożywcze', @nazwaFir='Exotic Liquids'
+GO
+ALTER TABLE Produkty CHECK CONSTRAINT ALL
+GO
+ALTER TABLE Zamowienia NOCHECK CONSTRAINT ALL
+GO
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='Przesyłka tylko po 15:00', @idKlienta=3, @IdDostawcy=1
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=24, @IdDostawcy=2
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=23, @IdDostawcy=3
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=22, @IdDostawcy=4
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=21, @IdDostawcy=5
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=18, @IdDostawcy=6
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=9, @IdDostawcy=7
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=26, @IdDostawcy=8
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=8, @IdDostawcy=9
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=14, @IdDostawcy=10
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=15, @IdDostawcy=11
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=9, @IdDostawcy=12
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=21, @IdDostawcy=13
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=23, @IdDostawcy=14
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=5, @IdDostawcy=15
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=1, @IdDostawcy=16
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=2, @IdDostawcy=17
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=3, @IdDostawcy=18
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=7, @IdDostawcy=19
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=5, @IdDostawcy=20
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=6, @IdDostawcy=21
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=7, @IdDostawcy=21
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=8, @IdDostawcy=2
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=9, @IdDostawcy=1
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=11, @IdDostawcy=1
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=12, @IdDostawcy=1
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=13, @IdDostawcy=7
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=14, @IdDostawcy=19
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=15, @IdDostawcy=21
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=16, @IdDostawcy=22
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=17, @IdDostawcy=23
+EXEC ProcDodajZamowienie @dataZam='2022-06-04', @dataOpl=null, @uwagi='', @idKlienta=18, @IdDostawcy=24
+GO
+ALTER TABLE Zamowienia CHECK CONSTRAINT ALL
+GO
+ALTER TABLE PozycjeZamowienia NOCHECK CONSTRAINT ALL
+GO
+INSERT INTO PozycjeZamowienia(Ilosc,IdProduktu,IdZamowienia) VALUES (23,1,2)
+INSERT INTO PozycjeZamowienia(Ilosc,IdProduktu,IdZamowienia) VALUES (80,2,2)
+INSERT INTO PozycjeZamowienia(Ilosc,IdProduktu,IdZamowienia) VALUES (15,3,3)
+INSERT INTO PozycjeZamowienia(Ilosc,IdProduktu,IdZamowienia) VALUES (10,4,3)
+INSERT INTO PozycjeZamowienia(Ilosc,IdProduktu,IdZamowienia) VALUES (23,5,3)
+INSERT INTO PozycjeZamowienia(Ilosc,IdProduktu,IdZamowienia) VALUES (3,6,4)
+INSERT INTO PozycjeZamowienia(Ilosc,IdProduktu,IdZamowienia) VALUES (100,7,4)
+INSERT INTO PozycjeZamowienia(Ilosc,IdProduktu,IdZamowienia) VALUES (115,8,4)
+INSERT INTO PozycjeZamowienia(Ilosc,IdProduktu,IdZamowienia) VALUES (10,5,5)
+INSERT INTO PozycjeZamowienia(Ilosc,IdProduktu,IdZamowienia) VALUES (200,7,6)
+INSERT INTO PozycjeZamowienia(Ilosc,IdProduktu,IdZamowienia) VALUES (230,21,7)
+INSERT INTO PozycjeZamowienia(Ilosc,IdProduktu,IdZamowienia) VALUES (23,5,9)
+INSERT INTO PozycjeZamowienia(Ilosc,IdProduktu,IdZamowienia) VALUES (113,5,32)
+INSERT INTO PozycjeZamowienia(Ilosc,IdProduktu,IdZamowienia) VALUES (29,30,32)
+INSERT INTO PozycjeZamowienia(Ilosc,IdProduktu,IdZamowienia) VALUES (15,8,32)
+INSERT INTO PozycjeZamowienia(Ilosc,IdProduktu,IdZamowienia) VALUES (4,35,32)
+
+ALTER TABLE PozycjeZamowienia CHECK CONSTRAINT ALL
+GO
+
+--DODANIE FAKTUR:
+
+ALTER TABLE Zamowienia NOCHECK CONSTRAINT ALL
+GO
+UPDATE Zamowienia 
+SET DataOplacenia='2022-06-04'
+WHERE IdZamowienia=2
+GO
+ALTER TABLE Zamowienia NOCHECK CONSTRAINT ALL
+GO
+UPDATE Zamowienia 
+SET Status='zapłacone'
+WHERE IdZamowienia=2
+GO 
+ALTER TABLE Zamowienia NOCHECK CONSTRAINT ALL
+GO
+UPDATE Zamowienia 
+SET DataOplacenia='2022-06-04'
+WHERE IdZamowienia=3
+GO
+ALTER TABLE Zamowienia NOCHECK CONSTRAINT ALL
+GO
+UPDATE Zamowienia 
+SET Status='zapłacone'
+WHERE IdZamowienia=3
+GO 
+ALTER TABLE Zamowienia NOCHECK CONSTRAINT ALL
+GO
+UPDATE Zamowienia 
+SET DataOplacenia='2022-06-04'
+WHERE IdZamowienia=5
+GO
+ALTER TABLE Zamowienia NOCHECK CONSTRAINT ALL
+GO
+UPDATE Zamowienia 
+SET Status='zapłacone'
+WHERE IdZamowienia=5
+GO 
+ALTER TABLE Zamowienia NOCHECK CONSTRAINT ALL
+GO
+UPDATE Zamowienia 
+SET DataOplacenia='2022-06-04'
+WHERE IdZamowienia=9
+GO
+ALTER TABLE Zamowienia NOCHECK CONSTRAINT ALL
+GO
+UPDATE Zamowienia 
+SET Status='zapłacone'
+WHERE IdZamowienia=9
+GO
+ALTER TABLE Zamowienia NOCHECK CONSTRAINT ALL
+GO
+UPDATE Zamowienia 
+SET DataOplacenia='2022-06-04'
+WHERE IdZamowienia=4
+GO
+ALTER TABLE Zamowienia NOCHECK CONSTRAINT ALL
+GO
+UPDATE Zamowienia 
+SET Status='zapłacone'
+WHERE IdZamowienia=4
+GO
+ALTER TABLE Zamowienia NOCHECK CONSTRAINT ALL
+GO
+UPDATE Zamowienia 
+SET DataOplacenia='2022-06-04'
+WHERE IdZamowienia=32
+GO
+ALTER TABLE Zamowienia NOCHECK CONSTRAINT ALL
+GO
+UPDATE Zamowienia 
+SET Status='zapłacone'
+WHERE IdZamowienia=32
+GO
+ALTER TABLE Zamowienia CHECK CONSTRAINT ALL
+GO
+
+
+--SPRAWDZENIE TABELI DOSTAWCOW
+
+CREATE PROCEDURE TestSprTychSamychDostawcow
+AS
+BEGIN
+	declare @result int;
+	SELECT @result=( SELECT COUNT(IdDostawcy)
+	FROM Dostawcy 
+	GROUP BY IdDostawcy, NazwaFirmy  
+	HAVING COUNT(IdDostawcy)>1)
+
+	IF @result=null
+	BEGIN 
+		PRINT 'Nie ma zadnych duplikatów w tabeli Dostawcy'
+	END
+	
+END	
+GO
+
+
+
+
+
+
+
+
+
+
